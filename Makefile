@@ -7,9 +7,9 @@ LIBS = -lm ${SDLLIB}
 CFLAGS = -std=c++17 -g -Wall ${INCS}
 LDFLAGS = -s ${LIBS}
 
-.PHONY: all options clean run
-
-all: options clean sr2d run
+.PHONY: all
+all: options
+	${CC} -o game game.cpp ${CFLAGS} ${LDFLAGS}
 
 options:
 	@echo sr2d build options:
@@ -17,12 +17,3 @@ options:
 	@echo "CFLAGS   = ${CFLAGS}"
 	@echo "LDFLAGS  = ${LDFLAGS}"
 
-clean:
-	@echo cleaning
-	@rm -f sr2d
-
-sr2d: ${OBJ}
-	${CC} -o $@ $@.cpp ${CFLAGS} ${LDFLAGS}
-
-run:
-	@./sr2d
