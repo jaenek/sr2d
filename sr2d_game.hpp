@@ -1,7 +1,16 @@
-struct Game
-{
-	bool quit;
+namespace sr2d {
 
-	void update(float dt);
+class Game
+{
+private:
+	SDL_Renderer *renderer;
+	SDL_Window *window;
+	bool done;
+
+public:
+	void init(int width, int height);
+	void loop();
+	void quit();
 };
 
+}

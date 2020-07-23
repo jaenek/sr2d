@@ -1,5 +1,8 @@
+namespace sr2d {
+
 template <typename... T>
-void println(T... args) {
+void println(T... args)
+{
     auto print = [](auto a) {
         std::cerr << a;
     };
@@ -26,3 +29,4 @@ T *sec(T *ptr)
     return ptr;
 }
 
+}
