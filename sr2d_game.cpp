@@ -1,28 +1,28 @@
 namespace sr2d {
 
-void Game::init(int width, int height, struct *ctx)
+void Game::init(int width, int height, struct Context *ctx)
 {
-	sr2d::sec(SDL_Init(SDL_INIT_VIDEO));
+	sec(SDL_Init(SDL_INIT_VIDEO));
 
     window =
-        sr2d::sec(SDL_CreateWindow(
+        sec(SDL_CreateWindow(
                 "sr2d",
                 0, 0, width, height,
                 SDL_WINDOW_RESIZABLE));
 
     renderer =
-        sr2d::sec(SDL_CreateRenderer(
+        sec(SDL_CreateRenderer(
                 window, -1,
                 SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED));
 
-	sr2d::sec(SDL_SetRenderDrawBlendMode(
+	sec(SDL_SetRenderDrawBlendMode(
             renderer,
             SDL_BLENDMODE_BLEND));
 
 	context = ctx;
 }
 
-void Game::loop(void (*render)(SDL_Renderer*, struct*))
+void Game::loop(void (*render)(SDL_Renderer*, struct Context *))
 {
     Uint32 prev_ticks = SDL_GetTicks();
     float lag_sec = 0;
@@ -37,8 +37,6 @@ void Game::loop(void (*render)(SDL_Renderer*, struct*))
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
 					done = true;
-			}
-
 			}
         }
 
