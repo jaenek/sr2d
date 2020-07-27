@@ -12,7 +12,9 @@ public:
 	std::list<Action> actions;
 
 	void init(const char *title, int width, int height, struct Context *);
-	void loop(void (*render)(SDL_Renderer *, struct Context *));
+	void loop(void (*update)(struct Context *),
+			void (*render)(SDL_Renderer *, struct Context *),
+			SDL_Color bgcolor);
 	void quit();
 };
 

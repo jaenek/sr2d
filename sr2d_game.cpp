@@ -22,7 +22,9 @@ void Game::init(const char *title, int width, int height, struct Context *ctx)
 	context = ctx;
 }
 
-void Game::loop(void (*render)(SDL_Renderer*, struct Context *))
+void Game::loop(void (*update)(struct Context *),
+		void (*render)(SDL_Renderer*, struct Context *),
+		SDL_Color bgcolor)
 {
     Uint32 prev_ticks = SDL_GetTicks();
     float lag_sec = 0;
@@ -46,8 +48,11 @@ void Game::loop(void (*render)(SDL_Renderer*, struct Context *))
 			}
         }
 
+		// UPDATE
+		update(context);
+
         // RENDER
-        sec(SDL_SetRenderDrawColor(renderer, 1, 174, 216, 255));
+        sec(SDL_SetRenderDrawColor(renderer, bgcolor.r, bgcolor.g, bgcolor.b, bgcolor.a));
         sec(SDL_RenderClear(renderer));
 
 		render(renderer, context);
