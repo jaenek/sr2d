@@ -36,7 +36,13 @@ void Game::loop(void (*render)(SDL_Renderer*, struct Context *))
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
-					done = true;
+				done = true;
+			}
+
+			for (auto a : actions) {
+				if (event.key.type == a.ontype && event.key.keysym.sym == a.onkey) {
+					a.action(context);
+				}
 			}
         }
 
