@@ -1,14 +1,14 @@
 namespace sr2d {
 
-void Game::init(int width, int height, struct Context *ctx)
+void Game::init(const char *title, int width, int height, struct Context *ctx)
 {
 	sec(SDL_Init(SDL_INIT_VIDEO));
 
     window =
         sec(SDL_CreateWindow(
-                "sr2d",
+                title,
                 0, 0, width, height,
-                SDL_WINDOW_RESIZABLE));
+                SDL_WINDOW_MAXIMIZED));
 
     renderer =
         sec(SDL_CreateRenderer(

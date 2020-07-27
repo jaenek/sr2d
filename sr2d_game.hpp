@@ -9,7 +9,7 @@ private:
 	struct Context *context;
 
 public:
-	void init(int width, int height, struct Context *);
+	void init(const char *title, int width, int height, struct Context *);
 	void loop(void (*render)(SDL_Renderer *, struct Context *));
 	void quit();
 };
