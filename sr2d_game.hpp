@@ -9,7 +9,7 @@ private:
 	struct Context *context;
 
 public:
-	std::list<Action> actions;
+	std::vector<Action> actions;
 
 	void init(const char *title, int width, int height, struct Context *);
 	void loop(void (*update)(struct Context *),

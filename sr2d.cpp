@@ -1,6 +1,6 @@
 // Single compilation unit
 #include <iostream>
-#include <list>
+#include <vector>
 #include <SDL2/SDL.h>
 
 #include "sr2d_util.cpp"
