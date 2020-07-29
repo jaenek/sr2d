@@ -10,12 +10,8 @@ sr2d::Game game;
 
 struct sr2d::Context {
 	struct player {
-		struct pos {
-			float x;
-			float y;
-		} pos;
-		float w;
-		float h;
+		sr2d::Vector pos;
+		sr2d::Vector size;
 	} player;
 } ctx;
 
@@ -45,7 +41,7 @@ void update(struct sr2d::Context *ctx) {
 void render(SDL_Renderer *renderer, struct sr2d::Context *ctx) {
 	SDL_Rect player = SDL_Rect{
 			(int)ctx->player.pos.x, (int)ctx->player.pos.y,
-			(int)ctx->player.w, (int)ctx->player.h
+			(int)ctx->player.size.x, (int)ctx->player.size.y
 	};
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 	SDL_RenderFillRect(renderer, &player);
@@ -55,10 +51,8 @@ int main(void)
 {
 	game.init("simple grid game", SCREEN_WIDTH, SCREEN_HEIGHT, &ctx);
 
-	ctx.player.w = PLAYER_WIDTH;
-	ctx.player.h = PLAYER_HEIGHT;
-	ctx.player.pos.x = SCREEN_WIDTH/2-20;
-	ctx.player.pos.y = SCREEN_HEIGHT/2-20;
+	ctx.player.pos = sr2d::Vector(SCREEN_WIDTH/2-20, SCREEN_HEIGHT/2-20);
+	ctx.player.size = sr2d::Vector(PLAYER_WIDTH, PLAYER_HEIGHT);
 
 	game.actions.push_back(sr2d::Action{SDL_KEYDOWN, SDLK_UP, moveup});
 	game.actions.push_back(sr2d::Action{SDL_KEYDOWN, SDLK_DOWN, movedown});
