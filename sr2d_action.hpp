@@ -1,7 +1,6 @@
 namespace sr2d {
 
-class Action {
-public:
+struct Action {
 	uint32_t ontype;
 	SDL_Keycode onkey;
 	void (*action)(struct Context *);

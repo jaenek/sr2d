@@ -22,9 +22,7 @@ void Game::init(const char *title, int width, int height, struct Context *ctx)
 	context = ctx;
 }
 
-void Game::loop(void (*update)(struct Context *),
-		void (*render)(SDL_Renderer*, struct Context *),
-		SDL_Color bgcolor)
+void Game::loop(void (*update)(struct Context *), void (*render)(SDL_Renderer*, struct Context *))
 {
     Uint32 prev_ticks = SDL_GetTicks();
     float lag_sec = 0;
@@ -52,9 +50,6 @@ void Game::loop(void (*update)(struct Context *),
 		update(context);
 
         // RENDER
-        sec(SDL_SetRenderDrawColor(renderer, bgcolor.r, bgcolor.g, bgcolor.b, bgcolor.a));
-        sec(SDL_RenderClear(renderer));
-
 		render(renderer, context);
 
         SDL_RenderPresent(renderer);

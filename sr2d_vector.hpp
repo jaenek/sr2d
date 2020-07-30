@@ -1,7 +1,6 @@
 namespace sr2d {
 
-class Vector {
-public:
+struct Vector {
 	float x;
 	float y;
 
