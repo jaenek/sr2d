@@ -1,6 +1,6 @@
 namespace sr2d {
 
-void Game::init(const char *title, int width, int height, struct Context *ctx)
+void Game::init(const char *title, int width, int height)
 {
 	sec(SDL_Init(SDL_INIT_VIDEO));
 
@@ -18,16 +18,14 @@ void Game::init(const char *title, int width, int height, struct Context *ctx)
 	sec(SDL_SetRenderDrawBlendMode(
             renderer,
             SDL_BLENDMODE_BLEND));
-
-	context = ctx;
 }
 
-void Game::loop(void (*update)(struct Context *), void (*render)(SDL_Renderer*, struct Context *))
+void Game::loop(void (*update)(struct Context *))
 {
-    Uint32 prev_ticks = SDL_GetTicks();
+    uint32_t prev_ticks = SDL_GetTicks();
     float lag_sec = 0;
     while (!done) {
-        Uint32 curr_ticks = SDL_GetTicks();
+        uint32_t curr_ticks = SDL_GetTicks();
         float elapsed_sec = (float) (curr_ticks - prev_ticks) / 1000.0f;
         prev_ticks = curr_ticks;
         lag_sec += elapsed_sec;
@@ -44,13 +42,19 @@ void Game::loop(void (*update)(struct Context *), void (*render)(SDL_Renderer*, 
 					a.action(context);
 				}
 			}
+
         }
 
 		// UPDATE
 		update(context);
 
-        // RENDER
-		render(renderer, context);
+        // DRAW
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_RenderClear(renderer);
+
+		for (auto d : drawables) {
+			d.draw(renderer);
+		}
 
         SDL_RenderPresent(renderer);
     }
@@ -58,6 +62,8 @@ void Game::loop(void (*update)(struct Context *), void (*render)(SDL_Renderer*, 
 
 void Game::quit()
 {
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
     SDL_Quit();
 }
 

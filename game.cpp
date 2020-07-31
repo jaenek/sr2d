@@ -9,7 +9,7 @@ const int PLAYER_SPEED  = 40;
 sr2d::Game game;
 
 struct sr2d::Context {
-	struct player {
+	struct Player {
 		SDL_Rect rect;
 	} player;
 } ctx;
@@ -42,28 +42,21 @@ void update(struct sr2d::Context *ctx)
 	if (ctx->player.rect.y > SCREEN_HEIGHT - PLAYER_HEIGHT) ctx->player.rect.y = SCREEN_HEIGHT - PLAYER_HEIGHT;
 }
 
-void render(SDL_Renderer *renderer, struct sr2d::Context *ctx)
-{
-	auto bgcolor = SDL_Color{0, 0, 0, 255};
-	sr2d::sec(SDL_SetRenderDrawColor(renderer, bgcolor.r, bgcolor.g, bgcolor.b, bgcolor.a));
-	sr2d::sec(SDL_RenderClear(renderer));
-
-	sr2d::sec(SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255));
-	sr2d::sec(SDL_RenderFillRect(renderer, &ctx->player.rect));
-}
-
 int main(void)
 {
-	game.init("simple grid game", SCREEN_WIDTH, SCREEN_HEIGHT, &ctx);
+	game.init("simple grid game", SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	ctx.player.rect = SDL_Rect{SCREEN_WIDTH/2-20, SCREEN_HEIGHT/2-20, PLAYER_WIDTH, PLAYER_HEIGHT};
+	game.context = &ctx;
+	game.context->player = sr2d::Context::Player{ SDL_Rect{SCREEN_WIDTH/2-20, SCREEN_HEIGHT/2-20, PLAYER_WIDTH, PLAYER_HEIGHT} };
+
+	game.drawables.emplace_back(game.renderer, &game.context->player.rect);
 
 	game.actions.emplace_back(SDL_KEYDOWN, SDLK_UP, moveup);
 	game.actions.emplace_back(SDL_KEYDOWN, SDLK_DOWN, movedown);
 	game.actions.emplace_back(SDL_KEYDOWN, SDLK_LEFT, moveleft);
 	game.actions.emplace_back(SDL_KEYDOWN, SDLK_RIGHT, moveright);
 
-	game.loop(update, render);
+	game.loop(update);
 
 	game.quit();
 }

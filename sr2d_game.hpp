@@ -7,9 +7,10 @@ struct Game
 	bool done;
 	struct Context *context;
 	std::vector<Action> actions;
+	std::vector<Drawable> drawables;
 
-	void init(const char *title, int width, int height, struct Context *);
-	void loop(void (*update)(struct Context *), void (*render)(SDL_Renderer *, struct Context *));
+	void init(const char *title, int width, int height);
+	void loop(void (*update)(struct Context *));
 	void quit();
 };
 
