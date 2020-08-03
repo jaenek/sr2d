@@ -35,29 +35,6 @@ T *sec(T *ptr)
     return ptr;
 }
 
-struct Drawable {
-	SDL_Surface *surface;
-	SDL_Texture *texture;
-	SDL_Rect *rect;
-
-	Drawable(SDL_Renderer *renderer, SDL_Rect *rect);
-	virtual void draw(SDL_Renderer *renderer);
-};
-
-Drawable::Drawable(SDL_Renderer *renderer, SDL_Rect *rect) {
-	this->rect = rect;
-
-	surface = SDL_CreateRGBSurface(0, rect->w, rect->h, 32, 0, 0, 0, 0);
-
-	sec(SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 255, 255, 255)));
-	texture = sec(SDL_CreateTextureFromSurface(renderer, surface));
-	SDL_FreeSurface(surface);
-}
-
-void Drawable::draw(SDL_Renderer *renderer) {
-	sec(SDL_RenderCopy(renderer, texture, NULL, rect));
-}
-
 enum Key {
 	UNKNOWN      = SDLK_UNKNOWN, // 0x00 ('\0')
 	BACKSPACE    = SDLK_BACKSPACE, // 0x08 ('\b')
@@ -157,39 +134,48 @@ enum Key {
 	UP           = SDLK_UP // 0x40000052
 };
 
-struct Game {
-	SDL_Renderer *renderer;
+struct Renderer {
 	SDL_Window *window;
+	SDL_Renderer *renderer;
+
+	virtual void init(const char *title, int width, int height);
+	virtual void drawrect(int x, int y, int width, int height);
+	virtual void fillrect(int x, int y, int width, int height);
+};
+
+void Renderer::init(const char *title, int width, int height)
+{
+	sec(SDL_Init(SDL_INIT_VIDEO));
+
+    window = sec(SDL_CreateWindow(title, 0, 0, width, height, SDL_WINDOW_MAXIMIZED));
+
+    renderer = sec(SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED));
+	sec(SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND));
+}
+
+void Renderer::drawrect(int x, int y, int w, int h)
+{
+	sec(SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255));
+	SDL_Rect rect = SDL_Rect{x, y, w, h};
+	sec(SDL_RenderDrawRect(renderer, &rect));
+}
+
+void Renderer::fillrect(int x, int y, int w, int h)
+{
+	sec(SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255));
+	SDL_Rect rect = SDL_Rect{x, y, w, h};
+	sec(SDL_RenderFillRect(renderer, &rect));
+}
+
+struct Game : Renderer {
 	bool done;
 	std::map<Key, bool> keyboardstate;
-	std::vector<Drawable> drawables;
 
-	void init(const char *title, int width, int height);
 	bool getkey(Key k);
 	void coreupdate();
 	virtual void update();
 	void quit();
 };
-
-void Game::init(const char *title, int width, int height)
-{
-	sec(SDL_Init(SDL_INIT_VIDEO));
-
-    window =
-        sec(SDL_CreateWindow(
-                title,
-                0, 0, width, height,
-                SDL_WINDOW_MAXIMIZED));
-
-    renderer =
-        sec(SDL_CreateRenderer(
-                window, -1,
-                SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED));
-
-	sec(SDL_SetRenderDrawBlendMode(
-            renderer,
-            SDL_BLENDMODE_BLEND));
-}
 
 bool Game::getkey(Key k)
 {
@@ -231,17 +217,14 @@ void Game::coreupdate()
 
         }
 
-		// UPDATE
-		update();
-
-		// DRAW
+		// CLEAR
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderClear(renderer);
 
-		for (auto d : drawables) {
-			d.draw(renderer);
-		}
+		// UPDATE
+		update();
 
+		// RENDER
         SDL_RenderPresent(renderer);
     }
 }
