@@ -40,7 +40,7 @@ enum Key {
 	BACKSPACE    = SDLK_BACKSPACE, // 0x08 ('\b')
 	TAB          = SDLK_TAB, // 0x09 ('\t')
 	RETURN       = SDLK_RETURN, // 0x0D ('\r')
-	ESCACPE      = SDLK_ESCAPE, // 0x1B ('\033')
+	ESCAPE      = SDLK_ESCAPE, // 0x1B ('\033')
 	SPACE        = SDLK_SPACE, // 0x20 (' ')
 	EXCLAIM      = SDLK_EXCLAIM, // 0x21 ('!')
 	DOUBLEQUOTE  = SDLK_QUOTEDBL, // 0x22 ('"')
@@ -138,12 +138,13 @@ struct Renderer {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 
-	virtual void init(const char *title, int width, int height);
-	virtual void drawrect(int x, int y, int width, int height);
-	virtual void fillrect(int x, int y, int width, int height);
+	Renderer(const char *title, int width, int height);
+	void drawline(int x1, int y1, int x2, int y2);
+	void drawrect(int x, int y, int w, int h);
+	void fillrect(int x, int y, int w, int h);
 };
 
-void Renderer::init(const char *title, int width, int height)
+Renderer::Renderer(const char *title, int width, int height)
 {
 	sec(SDL_Init(SDL_INIT_VIDEO));
 
@@ -151,6 +152,12 @@ void Renderer::init(const char *title, int width, int height)
 
     renderer = sec(SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED));
 	sec(SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND));
+}
+
+void Renderer::drawline(int x1, int y1, int x2, int y2)
+{
+	sec(SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255));
+	sec(SDL_RenderDrawLine(renderer, x1, y1, x2, y2));
 }
 
 void Renderer::drawrect(int x, int y, int w, int h)
@@ -169,34 +176,31 @@ void Renderer::fillrect(int x, int y, int w, int h)
 
 struct Game : Renderer {
 	bool done;
+	uint32_t prevticks;
 	std::map<Key, bool> keyboardstate;
 
+	Game(const char *title, int width, int height) : Renderer(title, width, height) {};
+	float getelapsed();
 	bool getkey(Key k);
 	void coreupdate();
-	virtual void update();
+	virtual void update(float elapsed) {};
 	void quit();
+
 };
+
+float Game::getelapsed()
+{
+	return SDL_GetTicks() - prevticks / 1000.f;
+}
 
 bool Game::getkey(Key k)
 {
 	return keyboardstate[k];
 }
 
-void Game::update()
-{
-
-}
-
 void Game::coreupdate()
 {
-    uint32_t prev_ticks = SDL_GetTicks();
-    float lag_sec = 0;
     while (!done) {
-        uint32_t curr_ticks = SDL_GetTicks();
-        float elapsed_sec = (float) (curr_ticks - prev_ticks) / 1000.0f;
-        prev_ticks = curr_ticks;
-        lag_sec += elapsed_sec;
-
 		// HANDLE INPUT
 		// clear keyboard state map
 		for (auto &k : keyboardstate) {
@@ -210,7 +214,7 @@ void Game::coreupdate()
 				done = true;
 			}
 
-			// events are numubers from 0 to
+			// handled events are numubers from 0 to 0x40000052(Key::UP)
 			if (event.key.type == SDL_KEYDOWN && event.key.keysym.sym <= Key::UP) {
 				keyboardstate[static_cast<Key>(event.key.keysym.sym)] = true;
 			}
@@ -218,11 +222,11 @@ void Game::coreupdate()
         }
 
 		// CLEAR
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		SDL_RenderClear(renderer);
+		sec(SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255));
+		sec(SDL_RenderClear(renderer));
 
 		// UPDATE
-		update();
+		update(getelapsed());
 
 		// RENDER
         SDL_RenderPresent(renderer);
@@ -234,6 +238,7 @@ void Game::quit()
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
     SDL_Quit();
+	exit(EXIT_SUCCESS);
 }
 
 }
