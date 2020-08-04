@@ -40,7 +40,7 @@ enum Key {
 	BACKSPACE    = SDLK_BACKSPACE, // 0x08 ('\b')
 	TAB          = SDLK_TAB, // 0x09 ('\t')
 	RETURN       = SDLK_RETURN, // 0x0D ('\r')
-	ESCAPE      = SDLK_ESCAPE, // 0x1B ('\033')
+	ESCAPE       = SDLK_ESCAPE, // 0x1B ('\033')
 	SPACE        = SDLK_SPACE, // 0x20 (' ')
 	EXCLAIM      = SDLK_EXCLAIM, // 0x21 ('!')
 	DOUBLEQUOTE  = SDLK_QUOTEDBL, // 0x22 ('"')
@@ -134,14 +134,37 @@ enum Key {
 	UP           = SDLK_UP // 0x40000052
 };
 
+struct Vec2i {
+	int x, y;
+
+	Vec2i(int x, int y) { this->x = x; this->y = y; }
+};
+
+enum Color {
+	RED, GREEN, BLUE, WHITE, BLACK
+};
+
+struct Rect {
+	int x, y, w, h;
+	Color color;
+
+	Rect(int s, Color color) { this->w = s; this->h = s; this->color = color; }
+	Rect(int w, int h, Color color) { this->x = 0; this->y = 0; this->w = w; this->h = h; this->color = color; }
+	Rect(int x, int y, int s, Color color) { this->x = x; this->y = y; this->w = s; this->h = s; this->color = color; }
+	Rect(int x, int y, int w, int h, Color color) { this->x = x; this->y = y; this->w = w; this->h = h; this->color = color; }
+	SDL_Rect toSDL() { return SDL_Rect{x, y, w, h}; }
+	Vec2i center() { return Vec2i(x+w/2, y+h/2); }
+};
+
 struct Renderer {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 
 	Renderer(const char *title, int width, int height);
-	void drawline(int x1, int y1, int x2, int y2);
-	void drawrect(int x, int y, int w, int h);
-	void fillrect(int x, int y, int w, int h);
+	void setcolor(Color c);
+	void drawline(int x1, int y1, int x2, int y2, Color color);
+	void drawrect(Rect *r);
+	void fillrect(Rect *r);
 };
 
 Renderer::Renderer(const char *title, int width, int height)
@@ -154,29 +177,41 @@ Renderer::Renderer(const char *title, int width, int height)
 	sec(SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND));
 }
 
-void Renderer::drawline(int x1, int y1, int x2, int y2)
+void Renderer::setcolor(Color c)
 {
-	sec(SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255));
+	SDL_Color color = SDL_Color{0, 0, 0, 255};
+	switch (c) {
+		case RED: color.r = 255; break;
+		case GREEN: color.g = 255; break;
+		case BLUE: color.b = 255; break;
+		case WHITE: color.r = 255; color.g = 255; color.b = 255; break;
+		default: break;
+	}
+	sec(SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a));
+}
+
+void Renderer::drawline(int x1, int y1, int x2, int y2, Color color)
+{
+	setcolor(color);
 	sec(SDL_RenderDrawLine(renderer, x1, y1, x2, y2));
 }
 
-void Renderer::drawrect(int x, int y, int w, int h)
+void Renderer::drawrect(Rect *r)
 {
-	sec(SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255));
-	SDL_Rect rect = SDL_Rect{x, y, w, h};
+	setcolor(r->color);
+	SDL_Rect rect = r->toSDL();
 	sec(SDL_RenderDrawRect(renderer, &rect));
 }
 
-void Renderer::fillrect(int x, int y, int w, int h)
+void Renderer::fillrect(Rect *r)
 {
-	sec(SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255));
-	SDL_Rect rect = SDL_Rect{x, y, w, h};
+	setcolor(r->color);
+	SDL_Rect rect = r->toSDL();
 	sec(SDL_RenderFillRect(renderer, &rect));
 }
 
 struct Game : Renderer {
 	bool done;
-	uint32_t prevticks;
 	std::map<Key, bool> keyboardstate;
 
 	Game(const char *title, int width, int height) : Renderer(title, width, height) {};
@@ -187,11 +222,6 @@ struct Game : Renderer {
 	void quit();
 
 };
-
-float Game::getelapsed()
-{
-	return SDL_GetTicks() - prevticks / 1000.f;
-}
 
 bool Game::getkey(Key k)
 {
@@ -226,7 +256,7 @@ void Game::coreupdate()
 		sec(SDL_RenderClear(renderer));
 
 		// UPDATE
-		update(getelapsed());
+		update(SDL_GetTicks() / 1000.f);
 
 		// RENDER
         SDL_RenderPresent(renderer);
