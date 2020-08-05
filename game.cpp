@@ -11,12 +11,9 @@ struct Pusher : sr2d::Game {
 
 	Pusher() : Game("Pusher", SCREEN_WIDTH, SCREEN_HEIGHT) {
 		player = new sr2d::Rect(SCREEN_WIDTH/2-20, SCREEN_HEIGHT/2-20, PLAYER_WIDTH, PLAYER_HEIGHT);
-		sr2d::println("time:");
 	}
 
 	void update(float elapsed) {
-		sr2d::println("\rtime:", elapsed);
-
 		if (getkey(sr2d::ESCAPE))
 			quit();
 
