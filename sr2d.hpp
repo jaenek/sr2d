@@ -140,18 +140,19 @@ struct Vec2i {
 	Vec2i(int x, int y) { this->x = x; this->y = y; }
 };
 
-enum Color {
-	RED, GREEN, BLUE, WHITE, BLACK
+struct Color {
+	uint8_t r, g, b, a;
+
+	Color(int r, int g, int b, int a=255) { this->r = r; this->g = g; this->b = b; this->a = a; };
 };
+
+static const Color RED(255, 0, 0), GREEN(0, 255, 0), BLUE(0, 0, 255), WHITE(255, 255, 255), BLACK(0, 0, 0), BLANK(0, 0, 0, 0);
 
 struct Rect {
 	int x, y, w, h;
-	Color color;
 
-	Rect(int s, Color color) { this->w = s; this->h = s; this->color = color; }
-	Rect(int w, int h, Color color) { this->x = 0; this->y = 0; this->w = w; this->h = h; this->color = color; }
-	Rect(int x, int y, int s, Color color) { this->x = x; this->y = y; this->w = s; this->h = s; this->color = color; }
-	Rect(int x, int y, int w, int h, Color color) { this->x = x; this->y = y; this->w = w; this->h = h; this->color = color; }
+	Rect(int x, int y, int s) { this->x = x; this->y = y; this->w = s; this->h = s; }
+	Rect(int x, int y, int w, int h) { this->x = x; this->y = y; this->w = w; this->h = h; }
 	SDL_Rect toSDL() { return SDL_Rect{x, y, w, h}; }
 	Vec2i center() { return Vec2i(x+w/2, y+h/2); }
 };
@@ -161,10 +162,9 @@ struct Renderer {
 	SDL_Renderer *renderer;
 
 	Renderer(const char *title, int width, int height);
-	void setcolor(Color c);
 	void drawline(int x1, int y1, int x2, int y2, Color color);
-	void drawrect(Rect *r);
-	void fillrect(Rect *r);
+	void drawrect(Rect *r, Color c);
+	void fillrect(Rect *r, Color c);
 };
 
 Renderer::Renderer(const char *title, int width, int height)
@@ -177,35 +177,22 @@ Renderer::Renderer(const char *title, int width, int height)
 	sec(SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND));
 }
 
-void Renderer::setcolor(Color c)
+void Renderer::drawline(int x1, int y1, int x2, int y2, Color c)
 {
-	SDL_Color color = SDL_Color{0, 0, 0, 255};
-	switch (c) {
-		case RED: color.r = 255; break;
-		case GREEN: color.g = 255; break;
-		case BLUE: color.b = 255; break;
-		case WHITE: color.r = 255; color.g = 255; color.b = 255; break;
-		default: break;
-	}
-	sec(SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a));
-}
-
-void Renderer::drawline(int x1, int y1, int x2, int y2, Color color)
-{
-	setcolor(color);
+	sec(SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a));
 	sec(SDL_RenderDrawLine(renderer, x1, y1, x2, y2));
 }
 
-void Renderer::drawrect(Rect *r)
+void Renderer::drawrect(Rect *r, Color c)
 {
-	setcolor(r->color);
+	sec(SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a));
 	SDL_Rect rect = r->toSDL();
 	sec(SDL_RenderDrawRect(renderer, &rect));
 }
 
-void Renderer::fillrect(Rect *r)
+void Renderer::fillrect(Rect *r, Color c)
 {
-	setcolor(r->color);
+	sec(SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a));
 	SDL_Rect rect = r->toSDL();
 	sec(SDL_RenderFillRect(renderer, &rect));
 }

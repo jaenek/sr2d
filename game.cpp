@@ -10,7 +10,7 @@ struct Pusher : sr2d::Game {
 	sr2d::Rect *player;
 
 	Pusher() : Game("Pusher", SCREEN_WIDTH, SCREEN_HEIGHT) {
-		player = new sr2d::Rect(SCREEN_WIDTH/2-20, SCREEN_HEIGHT/2-20, PLAYER_WIDTH, PLAYER_HEIGHT, sr2d::RED);
+		player = new sr2d::Rect(SCREEN_WIDTH/2-20, SCREEN_HEIGHT/2-20, PLAYER_WIDTH, PLAYER_HEIGHT);
 		sr2d::println("time:");
 	}
 
@@ -34,7 +34,7 @@ struct Pusher : sr2d::Game {
 		if (player->x > SCREEN_WIDTH - player->w) player->x = SCREEN_WIDTH - player->w;
 		if (player->y > SCREEN_HEIGHT - player->h) player->y = SCREEN_HEIGHT - player->h;
 
-		fillrect(player);
+		fillrect(player, sr2d::RED);
 	}
 } game;
 
