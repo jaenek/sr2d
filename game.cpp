@@ -7,10 +7,11 @@ const int PLAYER_HEIGHT = 40;
 const int PLAYER_SPEED  = 40;
 
 struct Pusher : sr2d::Game {
-	sr2d::Rect *player;
+	sr2d::Texture *player;
 
 	Pusher() : Game("Pusher", SCREEN_WIDTH, SCREEN_HEIGHT) {
-		player = new sr2d::Rect(SCREEN_WIDTH/2-20, SCREEN_HEIGHT/2-20, PLAYER_WIDTH, PLAYER_HEIGHT);
+		player = new sr2d::Texture(SCREEN_WIDTH/2-20, SCREEN_HEIGHT/2-20, PLAYER_WIDTH, PLAYER_HEIGHT);
+		player->load("pepper.bmp");
 	}
 
 	void update(float elapsed) {

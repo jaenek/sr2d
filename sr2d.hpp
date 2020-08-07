@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <vector>
 #include <map>
 #include <SDL2/SDL.h>
@@ -157,15 +158,43 @@ struct Rect {
 	Vec2i center() { return Vec2i(x+w/2, y+h/2); }
 };
 
+struct Texture : Rect {
+	uint32_t id;
+
+	Texture(int x, int y, int s) : Rect(x, y, s) { init(s, s); };
+	Texture(int x, int y, int w, int h) : Rect(x, y, w, h) { init(w, h); };
+	void init(int width, int height);
+	void load(const char *filename);
+};
+
 struct Renderer {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
+	std::vector<SDL_Texture*> textures;
 
 	Renderer(const char *title, int width, int height);
+	uint32_t createtexture(int width, int height);
+	void updatetexture(uint32_t id, SDL_Surface *surface);
 	void drawline(int x1, int y1, int x2, int y2, Color color);
 	void drawrect(Rect *r, Color c);
 	void fillrect(Rect *r, Color c);
+	void drawtexture(Texture t);
 };
+
+struct Game : Renderer {
+	bool done;
+	std::map<Key, bool> keyboardstate;
+
+	Game(const char *title, int width, int height) : Renderer(title, width, height) {};
+	float getelapsed();
+	bool getkey(Key k);
+	void coreupdate();
+	virtual void update(float elapsed) {};
+	void quit();
+
+};
+
+static std::unique_ptr<Game> _game;
 
 Renderer::Renderer(const char *title, int width, int height)
 {
@@ -175,6 +204,17 @@ Renderer::Renderer(const char *title, int width, int height)
 
     renderer = sec(SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED));
 	sec(SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND));
+}
+
+uint32_t Renderer::createtexture(int width, int height) {
+	textures.emplace_back(SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, width, height));
+	return textures.size() - 1;
+}
+
+void Renderer::updatetexture(uint32_t id, SDL_Surface *surface) {
+	sec(SDL_LockSurface(surface));
+	sec(SDL_UpdateTexture(textures[id], nullptr, surface->pixels, surface->pitch));
+	SDL_UnlockSurface(surface);
 }
 
 void Renderer::drawline(int x1, int y1, int x2, int y2, Color c)
@@ -197,18 +237,11 @@ void Renderer::fillrect(Rect *r, Color c)
 	sec(SDL_RenderFillRect(renderer, &rect));
 }
 
-struct Game : Renderer {
-	bool done;
-	std::map<Key, bool> keyboardstate;
-
-	Game(const char *title, int width, int height) : Renderer(title, width, height) {};
-	float getelapsed();
-	bool getkey(Key k);
-	void coreupdate();
-	virtual void update(float elapsed) {};
-	void quit();
-
-};
+void Renderer::drawtexture(Texture t)
+{
+	SDL_Rect dest = t.toSDL();
+	sec(SDL_RenderCopy(renderer, textures[t.id], nullptr, &dest));
+}
 
 bool Game::getkey(Key k)
 {
@@ -256,6 +289,19 @@ void Game::quit()
 	SDL_DestroyWindow(window);
     SDL_Quit();
 	exit(EXIT_SUCCESS);
+}
+
+void Texture::init(int width, int height) {
+	id = _game->createtexture(width, height);
+}
+
+void Texture::load(const char *filename)
+{
+	SDL_Surface *surface = sec(SDL_LoadBMP(filename));
+
+	_game->updatetexture(id, surface);
+
+	SDL_FreeSurface(surface);
 }
 
 }
