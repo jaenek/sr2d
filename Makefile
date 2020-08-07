@@ -4,8 +4,8 @@ SDLINC = `sdl2-config --cflags`
 SDLLIB = `sdl2-config --libs`
 INCS = -I. ${SDLINC}
 LIBS = -lm ${SDLLIB}
-CFLAGS = -std=c++17 -g -Wall ${INCS}
-LDFLAGS = -s ${LIBS}
+CFLAGS = -std=c++17 -g3 -Wall ${INCS}
+LDFLAGS = ${LIBS}
 
 .PHONY: all
 all: options
