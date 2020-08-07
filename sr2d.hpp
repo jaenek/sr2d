@@ -167,37 +167,49 @@ struct Texture : Rect {
 	void load(const char *filename);
 };
 
-struct Renderer {
+struct Game {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	std::vector<SDL_Texture*> textures;
+	std::map<Key, bool> keyboardstate;
+	bool done;
 
-	Renderer(const char *title, int width, int height);
 	uint32_t createtexture(int width, int height);
 	void updatetexture(uint32_t id, SDL_Surface *surface);
+	float getelapsed();
+	void quit();
+
+	Game(const char *title, int width, int height);
 	void drawline(int x1, int y1, int x2, int y2, Color color);
 	void drawrect(Rect *r, Color c);
 	void fillrect(Rect *r, Color c);
-	void drawtexture(Texture t);
-};
-
-struct Game : Renderer {
-	bool done;
-	std::map<Key, bool> keyboardstate;
-
-	Game(const char *title, int width, int height) : Renderer(title, width, height) {};
-	float getelapsed();
+	void drawtexture(Texture *t);
 	bool getkey(Key k);
-	void coreupdate();
 	virtual void update(float elapsed) {};
-	void quit();
+	void coreupdate();
 
 };
 
-static std::unique_ptr<Game> _game;
+static Game *_game;
 
-Renderer::Renderer(const char *title, int width, int height)
+void Texture::init(int width, int height)
 {
+	id = _game->createtexture(width, height);
+}
+
+void Texture::load(const char *filename)
+{
+	SDL_Surface *surface = sec(SDL_LoadBMP(filename));
+
+	_game->updatetexture(id, surface);
+
+	SDL_FreeSurface(surface);
+}
+
+Game::Game(const char *title, int width, int height)
+{
+	_game = this;
+
 	sec(SDL_Init(SDL_INIT_VIDEO));
 
     window = sec(SDL_CreateWindow(title, 0, 0, width, height, SDL_WINDOW_MAXIMIZED));
@@ -206,41 +218,41 @@ Renderer::Renderer(const char *title, int width, int height)
 	sec(SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND));
 }
 
-uint32_t Renderer::createtexture(int width, int height) {
-	textures.emplace_back(SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, width, height));
+uint32_t Game::createtexture(int width, int height) {
+	textures.emplace_back(SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, width, height));
 	return textures.size() - 1;
 }
 
-void Renderer::updatetexture(uint32_t id, SDL_Surface *surface) {
+void Game::updatetexture(uint32_t id, SDL_Surface *surface) {
 	sec(SDL_LockSurface(surface));
 	sec(SDL_UpdateTexture(textures[id], nullptr, surface->pixels, surface->pitch));
 	SDL_UnlockSurface(surface);
 }
 
-void Renderer::drawline(int x1, int y1, int x2, int y2, Color c)
+void Game::drawline(int x1, int y1, int x2, int y2, Color c)
 {
 	sec(SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a));
 	sec(SDL_RenderDrawLine(renderer, x1, y1, x2, y2));
 }
 
-void Renderer::drawrect(Rect *r, Color c)
+void Game::drawrect(Rect *r, Color c)
 {
 	sec(SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a));
 	SDL_Rect rect = r->toSDL();
 	sec(SDL_RenderDrawRect(renderer, &rect));
 }
 
-void Renderer::fillrect(Rect *r, Color c)
+void Game::fillrect(Rect *r, Color c)
 {
 	sec(SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a));
 	SDL_Rect rect = r->toSDL();
 	sec(SDL_RenderFillRect(renderer, &rect));
 }
 
-void Renderer::drawtexture(Texture t)
+void Game::drawtexture(Texture *t)
 {
-	SDL_Rect dest = t.toSDL();
-	sec(SDL_RenderCopy(renderer, textures[t.id], nullptr, &dest));
+	SDL_Rect dest = t->toSDL();
+	sec(SDL_RenderCopy(renderer, textures[t->id], nullptr, &dest));
 }
 
 bool Game::getkey(Key k)
@@ -290,18 +302,4 @@ void Game::quit()
     SDL_Quit();
 	exit(EXIT_SUCCESS);
 }
-
-void Texture::init(int width, int height) {
-	id = _game->createtexture(width, height);
-}
-
-void Texture::load(const char *filename)
-{
-	SDL_Surface *surface = sec(SDL_LoadBMP(filename));
-
-	_game->updatetexture(id, surface);
-
-	SDL_FreeSurface(surface);
-}
-
 }
