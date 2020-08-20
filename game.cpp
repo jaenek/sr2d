@@ -7,10 +7,29 @@ const int PLAYER_SPEED  = 40;
 
 struct Pusher : sr2d::Game {
 	sr2d::Texture *player;
+	sr2d::Texture *block;
+	sr2d::Grid *grid;
 
 	Pusher() : Game("Pusher", SCREEN_WIDTH, SCREEN_HEIGHT) {
-		player = new sr2d::Texture(SCREEN_WIDTH/2-20, SCREEN_HEIGHT/2-20, PLAYER_SIZE);
-		player->load("pepper.bmp");
+		player = new sr2d::Texture("pepper.bmp", SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+
+		block = new sr2d::Texture("block.bmp");
+
+		grid = new sr2d::Grid(16, 12, 640, 480);
+		grid->lookup.insert({'#', block});
+		grid->createfromtext(
+			"################"
+			"################"
+			"################"
+			"################"
+			"################"
+			"################"
+			"################"
+			"################"
+			"################"
+			"################"
+			"################"
+			"################");
 	}
 
 	void update(float elapsed) {
@@ -31,6 +50,7 @@ struct Pusher : sr2d::Game {
 		if (player->x > SCREEN_WIDTH - player->w) player->x = SCREEN_WIDTH - player->w;
 		if (player->y > SCREEN_HEIGHT - player->h) player->y = SCREEN_HEIGHT - player->h;
 
+		drawgrid(grid);
 		drawtexture(player);
 	}
 } game;

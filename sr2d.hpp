@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <memory>
 #include <vector>
 #include <map>
@@ -161,10 +162,20 @@ struct Rect {
 struct Texture : Rect {
 	uint32_t id;
 
-	Texture(int x, int y, int s) : Rect(x, y, s) { init(s, s); };
-	Texture(int x, int y, int w, int h) : Rect(x, y, w, h) { init(w, h); };
-	void init(int width, int height);
-	void load(const char *filename);
+	Texture(const char *filename, int x=0, int y=0) : Rect(x, y, 0) { init(filename); };
+	void init(const char *filename);
+};
+
+struct Grid : Rect {
+	int nx, ny;
+	int cw, ch;
+	std::map<char, Texture*> lookup;
+	std::vector<Texture*> cells;
+
+	Grid(int nx, int ny, int w, int h) : Rect(0, 0, nx*w, ny*h), nx{nx}, ny{ny}, cw{w/nx}, ch{h/ny} { init(nx, ny, w, h); };
+	Grid(int x, int y, int nx, int ny, int w, int h) : Rect(x, y, nx*w, ny*h), nx{nx}, ny{ny}, cw{w/nx}, ch{h/ny} { init(nx, ny, w, h); };
+	void init(int nx, int ny, int cw, int ch);
+	void createfromtext(std::string text);
 };
 
 struct Game {
@@ -184,6 +195,7 @@ struct Game {
 	void drawrect(Rect *r, Color c);
 	void fillrect(Rect *r, Color c);
 	void drawtexture(Texture *t);
+	void drawgrid(Grid *g);
 	bool getkey(Key k);
 	virtual void update(float elapsed) {};
 	void coreupdate();
@@ -192,18 +204,37 @@ struct Game {
 
 static Game *_game;
 
-void Texture::init(int width, int height)
-{
-	id = _game->createtexture(width, height);
-}
-
-void Texture::load(const char *filename)
+void Texture::init(const char *filename)
 {
 	SDL_Surface *surface = sec(SDL_LoadBMP(filename));
+
+	w = surface->w;
+	h = surface->h;
+	id = _game->createtexture(w, h);
 
 	_game->updatetexture(id, surface);
 
 	SDL_FreeSurface(surface);
+}
+
+void Grid::init(int nx, int ny, int width, int height)
+{
+	cw = width/nx;
+	ch = height/ny;
+
+	cells.resize(nx*ny);
+}
+
+void Grid::createfromtext(std::string text)
+{
+	uint32_t i = 0;
+	for (auto c : text) {
+		auto el = lookup.find(c);
+		if (el != lookup.end()) {
+			cells[i] = el->second;
+		}
+		i++;
+	}
 }
 
 Game::Game(const char *title, int width, int height)
@@ -253,6 +284,17 @@ void Game::drawtexture(Texture *t)
 {
 	SDL_Rect dest = t->toSDL();
 	sec(SDL_RenderCopy(renderer, textures[t->id], nullptr, &dest));
+}
+
+void Game::drawgrid(Grid *g)
+{
+	for (uint32_t i = 0; i < g->cells.size(); i++) {
+		if (g->cells[i] != nullptr) {
+			g->cells[i]->x = i%g->nx*g->cw;
+			g->cells[i]->y = i/g->ny*g->ch;
+			drawtexture(g->cells[i]);
+		}
+	}
 }
 
 bool Game::getkey(Key k)
