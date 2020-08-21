@@ -167,13 +167,13 @@ struct Texture : Rect {
 };
 
 struct Grid : Rect {
-	int nx, ny;
+	int stride;
 	int cw, ch;
 	std::map<char, Texture*> lookup;
 	std::vector<Texture*> cells;
 
-	Grid(int nx, int ny, int w, int h) : Rect(0, 0, nx*w, ny*h), nx{nx}, ny{ny}, cw{w/nx}, ch{h/ny} { init(nx, ny, w, h); };
-	Grid(int x, int y, int nx, int ny, int w, int h) : Rect(x, y, nx*w, ny*h), nx{nx}, ny{ny}, cw{w/nx}, ch{h/ny} { init(nx, ny, w, h); };
+	Grid(int nx, int ny, int w, int h) : Rect(0, 0, nx*w, ny*h) { init(nx, ny, w, h); };
+	Grid(int x, int y, int nx, int ny, int w, int h) : Rect(x, y, nx*w, ny*h) { init(nx, ny, w, h); };
 	void init(int nx, int ny, int cw, int ch);
 	void createfromtext(std::string text);
 };
@@ -219,6 +219,8 @@ void Texture::init(const char *filename)
 
 void Grid::init(int nx, int ny, int width, int height)
 {
+	stride = nx;
+
 	cw = width/nx;
 	ch = height/ny;
 
@@ -290,8 +292,8 @@ void Game::drawgrid(Grid *g)
 {
 	for (uint32_t i = 0; i < g->cells.size(); i++) {
 		if (g->cells[i] != nullptr) {
-			g->cells[i]->x = i%g->nx*g->cw;
-			g->cells[i]->y = i/g->ny*g->ch;
+			g->cells[i]->x = (i%g->stride)*g->cw;
+			g->cells[i]->y = (i/g->stride)*g->ch;
 			drawtexture(g->cells[i]);
 		}
 	}
