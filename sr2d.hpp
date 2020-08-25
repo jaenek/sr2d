@@ -166,6 +166,17 @@ struct Texture : Rect {
 	void init(const char *filename);
 };
 
+struct Animation : Rect {
+	Rect *src;
+	uint32_t id;
+	uint8_t framerate;
+	uint8_t framewidth;
+	float last;
+
+	Animation(const char *filename, int framewidth, int framerate, int x=0, int y=0) : Rect(x, y, 0) { init(filename, framewidth, framerate, x, y); };
+	void init(const char *filename, int framewidth, int framerate, int x, int y);
+};
+
 struct Grid : Rect {
 	int stride;
 	int cw, ch;
@@ -195,6 +206,7 @@ struct Game {
 	void drawrect(Rect *r, Color c);
 	void fillrect(Rect *r, Color c);
 	void drawtexture(Texture *t);
+	void drawanimation(Animation *a);
 	void drawgrid(Grid *g);
 	bool getkey(Key k);
 	virtual void update(float elapsed) {};
@@ -215,6 +227,26 @@ void Texture::init(const char *filename)
 	_game->updatetexture(id, surface);
 
 	SDL_FreeSurface(surface);
+}
+
+void Animation::init(const char *filename, int framewidth, int framerate, int x, int y)
+{
+	this->framerate = framerate;
+	this->framewidth = framewidth;
+
+	SDL_Surface *surface = sec(SDL_LoadBMP(filename));
+
+	this->x = x;
+	this->y = y;
+	w = surface->w;
+	h = surface->h;
+	id = _game->createtexture(w, h);
+
+	_game->updatetexture(id, surface);
+
+	SDL_FreeSurface(surface);
+
+	src = new Rect(0,0, framewidth, h);
 }
 
 void Grid::init(int nx, int ny, int width, int height)
@@ -249,6 +281,11 @@ Game::Game(const char *title, int width, int height)
 
     renderer = sec(SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED));
 	sec(SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND));
+}
+
+float Game::getelapsed()
+{
+	return SDL_GetTicks() / 1000.f;
 }
 
 uint32_t Game::createtexture(int width, int height) {
@@ -286,6 +323,22 @@ void Game::drawtexture(Texture *t)
 {
 	SDL_Rect dest = t->toSDL();
 	sec(SDL_RenderCopy(renderer, textures[t->id], nullptr, &dest));
+}
+
+void Game::drawanimation(Animation *a)
+{
+	float time = _game->getelapsed();
+	if ((time - a->last) == 1./a->framerate) {
+		a->src->x += a->framewidth;
+		if (a->src->x >= a->w) {
+			a->src->x = 0;
+		}
+		a->last = time;
+	}
+
+	SDL_Rect src = a->src->toSDL();
+	SDL_Rect dest = a->toSDL();
+	sec(SDL_RenderCopy(renderer, textures[a->id], &src, &dest));
 }
 
 void Game::drawgrid(Grid *g)
@@ -332,7 +385,7 @@ void Game::coreupdate()
 		sec(SDL_RenderClear(renderer));
 
 		// UPDATE
-		update(SDL_GetTicks() / 1000.f);
+		update(_game->getelapsed());
 
 		// RENDER
         SDL_RenderPresent(renderer);
