@@ -328,7 +328,7 @@ void Game::drawtexture(Texture *t)
 void Game::drawanimation(Animation *a)
 {
 	float time = _game->getelapsed();
-	if ((time - a->last) == 1./a->framerate) {
+	if ((time - a->last) > 1./a->framerate) {
 		a->src->x += a->framewidth;
 		if (a->src->x >= a->w) {
 			a->src->x = 0;
@@ -338,6 +338,7 @@ void Game::drawanimation(Animation *a)
 
 	SDL_Rect src = a->src->toSDL();
 	SDL_Rect dest = a->toSDL();
+	dest.w = a->framewidth;
 	sec(SDL_RenderCopy(renderer, textures[a->id], &src, &dest));
 }
 
