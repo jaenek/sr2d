@@ -33,16 +33,16 @@ struct Pusher : sr2d::Game {
 	}
 
 	void update(float elapsed) {
-		if (getkey(sr2d::ESCAPE))
+		if (getkey(sr2d::ESCAPE).pressed)
 			quit();
 
-		if (getkey(sr2d::Key::UP))
+		if (getkey(sr2d::Key::UP).pressed)
 			player->y -= PLAYER_SPEED;
-		if (getkey(sr2d::DOWN))
+		if (getkey(sr2d::DOWN).pressed)
 			player->y += PLAYER_SPEED;
-		if (getkey(sr2d::LEFT))
+		if (getkey(sr2d::LEFT).pressed)
 			player->x -= PLAYER_SPEED;
-		if (getkey(sr2d::RIGHT))
+		if (getkey(sr2d::RIGHT).pressed)
 			player->x += PLAYER_SPEED;
 
 		if (player->x < 0) player->x = 0;

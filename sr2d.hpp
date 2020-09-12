@@ -136,6 +136,12 @@ enum Key {
 	UP           = SDLK_UP // 0x40000052
 };
 
+struct KeyState {
+	bool pressed;
+	bool held;
+	bool released;
+};
+
 struct Vec2i {
 	int x, y;
 
@@ -193,7 +199,7 @@ struct Game {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	std::vector<SDL_Texture*> textures;
-	std::map<Key, bool> keyboardstate;
+	std::map<Key, KeyState> keyboardstate;
 	bool done;
 
 	uint32_t createtexture(int width, int height);
@@ -208,7 +214,7 @@ struct Game {
 	void drawtexture(Texture *t);
 	void drawanimation(Animation *a);
 	void drawgrid(Grid *g);
-	bool getkey(Key k);
+	KeyState getkey(Key k);
 	virtual void update(float elapsed) {};
 	void coreupdate();
 
@@ -353,7 +359,7 @@ void Game::drawgrid(Grid *g)
 	}
 }
 
-bool Game::getkey(Key k)
+KeyState Game::getkey(Key k)
 {
 	return keyboardstate[k];
 }
@@ -362,9 +368,9 @@ void Game::coreupdate()
 {
     while (!done) {
 		// HANDLE INPUT
-		// clear keyboard state map
+		// update keyboard state map
 		for (auto &k : keyboardstate) {
-			k.second = false;
+			k.second.pressed = false;
 		}
 
 		// detect new events
@@ -376,7 +382,13 @@ void Game::coreupdate()
 
 			// handled events are numubers from 0 to 0x40000052(Key::UP)
 			if (event.key.type == SDL_KEYDOWN && event.key.keysym.sym <= Key::UP) {
-				keyboardstate[static_cast<Key>(event.key.keysym.sym)] = true;
+				keyboardstate[static_cast<Key>(event.key.keysym.sym)].pressed = true;
+				keyboardstate[static_cast<Key>(event.key.keysym.sym)].held = true;
+			}
+
+			if (event.key.type == SDL_KEYUP && event.key.keysym.sym <= Key::UP) {
+				keyboardstate[static_cast<Key>(event.key.keysym.sym)].held = false;
+				keyboardstate[static_cast<Key>(event.key.keysym.sym)].released = true;
 			}
 
         }
