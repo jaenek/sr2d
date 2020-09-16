@@ -11,25 +11,25 @@ struct Pusher : sr2d::Game {
 	sr2d::Grid *grid;
 
 	Pusher() : Game("Pusher", SCREEN_WIDTH, SCREEN_HEIGHT) {
-		player = new sr2d::Animation("pepper_animation.bmp", 40, 12, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+		player = new sr2d::Animation("pepper_animation.bmp", PLAYER_SIZE, 12, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
 
 		block = new sr2d::Texture("block.bmp");
 
-		grid = new sr2d::Grid(16, 12, 640, 480);
+		grid = new sr2d::Grid(SCREEN_WIDTH/block->w, SCREEN_HEIGHT/block->h, SCREEN_WIDTH, SCREEN_HEIGHT);
 		grid->lookup.insert({'#', block});
 		grid->createfromtext(
-			"################"
-			"################"
-			"################"
-			"################"
-			"################"
-			"################"
-			"################"
-			"################"
-			"################"
-			"################"
-			"################"
-			"################");
+			"###############"
+			"#             #"
+			"#             #"
+			"# ####   #### #"
+			"#             #"
+			"#    #####    #"
+			"#             #"
+			"#  ##     ##  #"
+			"#    ## ##    #"
+			"#             #"
+			"#    #   #    #"
+			"###############");
 	}
 
 	void update(float elapsed) {

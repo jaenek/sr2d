@@ -176,7 +176,7 @@ struct Animation : Rect {
 	Rect *src;
 	uint32_t id;
 	uint8_t framerate;
-	uint8_t framewidth;
+	int texturewidth;
 	float last;
 
 	Animation(const char *filename, int framewidth, int framerate, int x=0, int y=0) : Rect(x, y, 0) { init(filename, framewidth, framerate, x, y); };
@@ -184,14 +184,14 @@ struct Animation : Rect {
 };
 
 struct Grid : Rect {
-	int stride;
+	uint32_t columns, rows;
 	int cw, ch;
 	std::map<char, Texture*> lookup;
 	std::vector<Texture*> cells;
 
-	Grid(int nx, int ny, int w, int h) : Rect(0, 0, nx*w, ny*h) { init(nx, ny, w, h); };
+	Grid(uint32_t nx, uint32_t ny, int w, int h) : Rect(0, 0, nx*w, ny*h) { init(nx, ny, w, h); };
 	Grid(int x, int y, int nx, int ny, int w, int h) : Rect(x, y, nx*w, ny*h) { init(nx, ny, w, h); };
-	void init(int nx, int ny, int cw, int ch);
+	void init(uint32_t nx, uint32_t ny, int cw, int ch);
 	void createfromtext(std::string text);
 };
 
@@ -237,16 +237,15 @@ void Texture::init(const char *filename)
 
 void Animation::init(const char *filename, int framewidth, int framerate, int x, int y)
 {
-	this->framerate = framerate;
-	this->framewidth = framewidth;
-
 	SDL_Surface *surface = sec(SDL_LoadBMP(filename));
 
 	this->x = x;
 	this->y = y;
-	w = surface->w;
+	w = framewidth;
 	h = surface->h;
-	id = _game->createtexture(w, h);
+	this->framerate = framerate;
+	texturewidth = surface->w;
+	id = _game->createtexture(surface->w, h);
 
 	_game->updatetexture(id, surface);
 
@@ -255,18 +254,24 @@ void Animation::init(const char *filename, int framewidth, int framerate, int x,
 	src = new Rect(0,0, framewidth, h);
 }
 
-void Grid::init(int nx, int ny, int width, int height)
+void Grid::init(uint32_t columns, uint32_t rows, int width, int height)
 {
-	stride = nx;
+	this->columns = columns;
+	this->rows = rows;
 
-	cw = width/nx;
-	ch = height/ny;
+	cw = width/columns;
+	ch = height/rows;
 
-	cells.resize(nx*ny);
+	cells.resize(rows*columns);
 }
 
 void Grid::createfromtext(std::string text)
 {
+	if (text.size() > rows*columns) {
+		println("Error: text argument is to long (", text.size(), "), expected maximum size = ", rows*columns, "(", columns, "x", rows, ")");
+		abort();
+	}
+
 	uint32_t i = 0;
 	for (auto c : text) {
 		auto el = lookup.find(c);
@@ -335,8 +340,8 @@ void Game::drawanimation(Animation *a)
 {
 	float time = _game->getelapsed();
 	if ((time - a->last) > 1./a->framerate) {
-		a->src->x += a->framewidth;
-		if (a->src->x >= a->w) {
+		a->src->x += a->w;
+		if (a->src->x >= a->texturewidth) {
 			a->src->x = 0;
 		}
 		a->last = time;
@@ -344,7 +349,6 @@ void Game::drawanimation(Animation *a)
 
 	SDL_Rect src = a->src->toSDL();
 	SDL_Rect dest = a->toSDL();
-	dest.w = a->framewidth;
 	sec(SDL_RenderCopy(renderer, textures[a->id], &src, &dest));
 }
 
@@ -352,8 +356,8 @@ void Game::drawgrid(Grid *g)
 {
 	for (uint32_t i = 0; i < g->cells.size(); i++) {
 		if (g->cells[i] != nullptr) {
-			g->cells[i]->x = (i%g->stride)*g->cw;
-			g->cells[i]->y = (i/g->stride)*g->ch;
+			g->cells[i]->x = (i%g->columns)*g->cw;
+			g->cells[i]->y = (i/g->columns)*g->ch;
 			drawtexture(g->cells[i]);
 		}
 	}
