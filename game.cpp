@@ -3,15 +3,17 @@
 const int SCREEN_WIDTH  = 600;
 const int SCREEN_HEIGHT = 480;
 const int PLAYER_SIZE  = 40;
-const int PLAYER_SPEED  = 40;
+const int PLAYER_SPEED  = 5;
+const int PLAYER_MAX_SPEED  = 40;
 
 struct Pusher : sr2d::Game {
+	int velx, vely;
 	sr2d::Animation *player;
 	sr2d::Texture *block;
 	sr2d::Grid *grid;
 
 	Pusher() : Game("Pusher", SCREEN_WIDTH, SCREEN_HEIGHT) {
-		player = new sr2d::Animation("pepper_animation.bmp", PLAYER_SIZE, 12, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+		player = new sr2d::Animation("pepper_animation.bmp", PLAYER_SIZE, 12, 40, 40);
 
 		block = new sr2d::Texture("block.bmp");
 
@@ -37,18 +39,32 @@ struct Pusher : sr2d::Game {
 			quit();
 
 		if (getkey(sr2d::Key::UP).pressed)
-			player->y -= PLAYER_SPEED;
+			if (abs(vely) < PLAYER_MAX_SPEED)
+				vely -= PLAYER_SPEED;
 		if (getkey(sr2d::DOWN).pressed)
-			player->y += PLAYER_SPEED;
+			if (abs(vely) < PLAYER_MAX_SPEED)
+				vely += PLAYER_SPEED;
 		if (getkey(sr2d::LEFT).pressed)
-			player->x -= PLAYER_SPEED;
+			if (abs(velx) < PLAYER_MAX_SPEED)
+				velx -= PLAYER_SPEED;
 		if (getkey(sr2d::RIGHT).pressed)
-			player->x += PLAYER_SPEED;
+			if (abs(velx) < PLAYER_MAX_SPEED)
+				velx += PLAYER_SPEED;
 
-		if (player->x < 0) player->x = 0;
-		if (player->y < 0) player->y = 0;
-		if (player->x > SCREEN_WIDTH - player->w) player->x = SCREEN_WIDTH - player->w;
-		if (player->y > SCREEN_HEIGHT - player->h) player->y = SCREEN_HEIGHT - player->h;
+		player->x += velx;
+		player->y += vely;
+
+		if (grid->boxintersection(player)) {
+			sr2d::println("collision: ", player->x, ",", player->y);
+			player->x -= velx;
+			player->y -= vely;
+		}
+
+		if (velx > 0) velx--;
+		if (velx < 0) velx++;
+		if (vely > 0) vely--;
+		if (vely < 0) vely++;
+
 
 		drawgrid(grid);
 		drawanimation(player);

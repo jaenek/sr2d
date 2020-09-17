@@ -193,6 +193,8 @@ struct Grid : Rect {
 	Grid(int x, int y, int nx, int ny, int w, int h) : Rect(x, y, nx*w, ny*h) { init(nx, ny, w, h); };
 	void init(uint32_t nx, uint32_t ny, int cw, int ch);
 	void createfromtext(std::string text);
+	Rect* pointintersection(int px, int py);
+	bool boxintersection(Rect* rect);
 };
 
 struct Game {
@@ -277,9 +279,26 @@ void Grid::createfromtext(std::string text)
 		auto el = lookup.find(c);
 		if (el != lookup.end()) {
 			cells[i] = el->second;
+		} else {
+			cells[i] = nullptr;
 		}
 		i++;
 	}
+}
+
+Rect* Grid::pointintersection(int px, int py) {
+	int col = px / cw;
+	int row = py / ch;
+	return cells[row*columns+col];
+}
+
+bool Grid::boxintersection(Rect *rect) {
+	 if (pointintersection(rect->x, rect->y)) return true;
+	 if (pointintersection(rect->x+rect->w, rect->y)) return true;
+	 if (pointintersection(rect->x, rect->y+rect->h)) return true;
+	 if (pointintersection(rect->x+rect->w, rect->y+rect->h)) return true;
+	 return false;
+
 }
 
 Game::Game(const char *title, int width, int height)
